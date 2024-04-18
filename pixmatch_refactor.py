@@ -56,6 +56,15 @@ if "GameDetails" not in mystate: mystate.GameDetails = ['Medium', 6, 7, '']  # d
 
 # common functions
 def ReduceGapFromPageTop(wch_section = 'main page'):
+    """
+    Especifica la sección en la cual se va a reducir el espacio en blanco de la página.
+    Las cuales pueden ser:
+     - main page
+     - sidebar
+     - all
+    Cada una con características diferentes para eliminar el gap.
+    La función "st.markdown(...)" es nativa de Streamlit para renderizar texto en Markdown en CSS.
+    """
     if wch_section == 'main page': st.markdown(" <style> div[class^='block-container'] { padding-top: 2rem; } </style> ", True) # main area
     elif wch_section == 'sidebar': st.markdown(" <style> div[class^='st-emotion-cache-10oheav'] { padding-top: 0rem; } </style> ", True) # sidebar
     elif wch_section == 'all': 
@@ -63,6 +72,34 @@ def ReduceGapFromPageTop(wch_section = 'main page'):
         st.markdown(" <style> div[class^='st-emotion-cache-10oheav'] { padding-top: 0rem; } </style> ", True) # sidebar
     
 def Leaderboard(what_to_do):
+    """
+    Esta es la función que determina qué hacemos con el Leaderboard.
+    Recibimos "what_to_do" que nos indicará qué hacer en ese caso específico.
+
+    Si "what_to_do" es igual a 'create':
+    1. Revisamos que haya un nombre en la sesión.
+    2. Revisamos que no haya un archivo 'leaderboard.json'.
+    Si esto se cumple, entonces creamos ese archivo en modo
+    escritura para poder modificarlo posteriormente en el juego.
+
+    Si "what_to_do" es igual a 'write':
+    1. Revisamos que haya un nombre en la sesión.
+    2. Abrimos el archivo 'leaderboard.json' y vemos qué tamaño tiene.
+    3. Añadimos el nuevo participante con su nombre, país y puntaje en la posición del tamaño del leaderboard + 1.
+    4. Convertimos los datos del archivo a tuplas con el método .items(), se organiza de manera descendete para que
+    las tupla con puntaje más alto quede de primero, y así sucesivamente.
+    Con el método dict() volvemos las tuplas nuevamente a un diccionario para poder volver a accederlo posteriormente.
+    5. Revisamos que el leaderboard solo contenga a 3 usuarios con sus respectivos puntajes más altos. Si no es así, entonces
+    itera sobre el tamaño del leaderboard eliminando los datos con menor puntaje (ya que ya está ordenado) hasta que tenga una longitud máxima de 3.
+    6. Al final, simplemente escribe en el archivo json los cambios que hizo, dejando los 3 usuarios con sus respectivos puntajes más altos.
+
+    Si "what_to_do" es igual a 'read':
+    1. Revisamos que haya un nombre en la sesión.
+    2. Si existe el archivo de leaderboard.json, lo abrimos en modo lectura.
+    3. Organizamos de manera descendente el archivo.
+    4. Hacemos un ciclo para iterar sobre el leaderboard e ir imprimiendo de manera
+    ordenada las sesiones con puntajes más altos.
+    """
     if what_to_do == 'create':
         if mystate.GameDetails[3] != '':
             if os.path.isfile(vpth + 'leaderboard.json') == False:
@@ -102,6 +139,13 @@ def Leaderboard(what_to_do):
                         elif rknt == 3: sc3.write(f"🥈 | {leaderboard[vkey]['NameCountry']}: :red[{leaderboard[vkey]['HighestScore']}]")
 
 def InitialPage():
+    """
+    Simplemente una presentación de la ágina principal del programa.
+    Se utilizan métodos de Streamlit como .subheader .markdown, etc...
+    Se utiliza CSS para las fuentes de las letras.
+
+    En la columna 2 se muestran las reglas, una imagen e información del autor.
+    """
     with st.sidebar:
         st.subheader("🖼️ Pix Match:")
         st.markdown(horizontal_bar, True)
@@ -137,6 +181,9 @@ def InitialPage():
     st.markdown(author_dtl, unsafe_allow_html=True)
 
 def ReadPictureFile(wch_fl):
+    """
+    Lee un archivo de imagen específico y luego devuelve los datos de la imagen codificados en base64
+    """
     try:
         pxfl = f"{vpth}{wch_fl}"
         return base64.b64encode(open(pxfl, 'rb').read()).decode()
