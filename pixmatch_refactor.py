@@ -191,6 +191,20 @@ def ReadPictureFile(wch_fl):
     except: return ""
 
 def PressedCheck(vcell):
+    """
+    1. Verifica si un botón de jugador específico no ha sido presionado previamente.
+    2. Si el botón no ha sido presionado:
+    - Marca el botón como presionado.
+    - Agrega la celda correspondiente a una lista de celdas seleccionadas.
+    3. Comprueba si el emoji del botón coincide con un emoji específico.
+    Si los emojis coinciden:
+    - Marca el botón como verdadero.
+    - Incrementa la puntuación del jugador.
+    - Ajusta la puntuación según la dificultad del juego.
+    Si los emojis no coinciden:
+    - Marca el botón como falso.
+    - Reduce la puntuación del jugador.
+    """
     if mystate.plyrbtns[vcell]['isPressed'] == False:
         mystate.plyrbtns[vcell]['isPressed'] = True
         mystate.expired_cells.append(vcell)
@@ -208,6 +222,16 @@ def PressedCheck(vcell):
             mystate.myscore -= 1
 
 def ResetBoard():
+    """
+    1. Obtiene el número total de celdas por fila o columna del juego.
+    2. Selecciona aleatoriamente un emoji de la lista mystate.emoji_bank para representar el emoji de la barra lateral del juego.
+    3. Inicializa una variable booleana para verificar si el emoji de la barra lateral está en la lista de emojis asignados a los botones del juego.
+    4. Recorre todas las celdas del juego y asigna emojis aleatorios a los botones que aún no han sido presionados.
+       Si el emoji asignado es igual al emoji de la barra lateral, marca la variable booleana como verdadera.
+    5. Después de asignar emojis a todos los botones, verifica si el emoji de la barra lateral está presente en la lista de emojis asignados a los botones. Si no lo está:
+     - Genera una lista de índices de botones que aún no han sido presionados.
+     - Si hay botones disponibles, selecciona uno aleatoriamente y asigna el emoji de la barra lateral a ese botón.
+    """
     total_cells_per_row_or_col = mystate.GameDetails[2]
 
     sidebar_emoji_no = random.randint(1, len(mystate.emoji_bank))-1
@@ -230,6 +254,15 @@ def ResetBoard():
             mystate.plyrbtns[lptr]['eMoji'] = mystate.sidebar_emoji
 
 def PreNewGame():
+    """
+    1. Obtiene el número total de celdas por fila o columna del juego desde mystate.GameDetails.
+    2. Inicializa la lista mystate.expired_cells y la variable mystate.myscore en 0.
+    3. Define diferentes listas de emojis para diferentes categorías como foxes, emojis, humans, foods, etc.
+    4. Selecciona aleatoriamente una lista de emojis basada en la dificultad del juego ('Easy', 'Medium', o 'Hard') y la asigna a mystate.emoji_bank.
+    5. Inicializa un diccionario mystate.plyrbtns que contiene información sobre cada botón del juego.
+       Cada botón se identifica por un número de celda y tiene tres propiedades: isPressed para indicar si el botón ha sido presionado,
+       isTrueFalse para indicar si la selección del jugador es verdadera o falsa, y eMoji para almacenar el emoji asociado al botón.
+    """
     total_cells_per_row_or_col = mystate.GameDetails[2]
     mystate.expired_cells = []
     mystate.myscore = 0
@@ -265,6 +298,15 @@ def PreNewGame():
     for vcell in range(1, ((total_cells_per_row_or_col ** 2)+1)): mystate.plyrbtns[vcell] = {'isPressed': False, 'isTrueFalse': False, 'eMoji': ''}
 
 def ScoreEmoji():
+    """
+    - Si la puntuación del jugador es igual a 0, devuelve el emoji '😐'.
+    - Si la puntuación del jugador está entre -5 y -1 (inclusive), devuelve el emoji '😏'.
+    - Si la puntuación del jugador está entre -10 y -6 (inclusive), devuelve el emoji '☹️'.
+    - Si la puntuación del jugador es igual o inferior a -11, devuelve el emoji '😖'.
+    - Si la puntuación del jugador está entre 1 y 5 (inclusive), devuelve el emoji '🙂'.
+    - Si la puntuación del jugador está entre 6 y 10 (inclusive), devuelve el emoji '😊'.
+    - Si la puntuación del jugador es mayor que 10, devuelve el emoji '😁'.
+    """
     if mystate.myscore == 0: return '😐'
     elif -5 <= mystate.myscore <= -1: return '😏'
     elif -10 <= mystate.myscore <= -6: return '☹️'
@@ -274,6 +316,18 @@ def ScoreEmoji():
     elif mystate.myscore > 10: return '😁'
 
 def NewGame():
+    """
+    - ResetBoard(): Esta función inicializa el tablero del juego y las variables relacionadas.
+    - ReduceGapFromPageTop('sidebar'): Ajusta el espacio en blanco en la parte superior de la barra lateral.
+    - Barra lateral: Dentro de un contenedor de barra lateral, se muestran detalles del juego como el tipo de juego
+      ("🖼️ Pix Match: {tipo de juego}"), el emoji de la barra lateral, el temporizador (si está activado), y la puntuación actual del jugador.
+    - Botones del juego: Se crean botones para cada celda del tablero del juego. Si una celda ha sido presionada por el jugador,
+      se muestra el emoji correspondiente. Si la celda aún no ha sido presionada, se muestra un botón con el emoji oculto.
+      Los emojis se obtienen de mystate.plyrbtns.
+    - Comprobación de finalización del juego: Si todas las celdas del tablero han sido presionadas, se llama a la función Leaderboard('write')
+      para registrar la puntuación en el marcador. Luego se muestra una animación de celebración (st.balloons()) o una animación de nieve (st.snow())
+      dependiendo de si la puntuación es positiva o no. Después de 5 segundos, la página se redirige a la página principal (Main) y se vuelve a cargar.
+    """
     ResetBoard()
     total_cells_per_row_or_col = mystate.GameDetails[2]
 
@@ -372,6 +426,18 @@ def NewGame():
         st.rerun()
 
 def Main():
+    """
+    - Ancho de la barra lateral: Reduce el ancho de la barra lateral a 310 píxeles mediante CSS.
+    - Color de los botones púrpuras: Aplica un estilo de color púrpura a los botones del juego.
+    - Inicialización de la página: Llama a la función InitialPage() para configurar la página inicial del juego.
+    - Selección de nivel de dificultad: Dentro de la barra lateral, proporciona un selector de radio para que el
+      usuario elija el nivel de dificultad del juego: 'Easy', 'Medium' o 'Hard'. También hay un campo de entrada de
+      texto para que el jugador ingrese su nombre y país, que es opcional y se usa solo para el marcador.
+    - Inicio de un nuevo juego: Si el usuario hace clic en el botón "🕹️ New Game", se establecen los detalles del juego
+      según el nivel de dificultad seleccionado. Luego se llama a la función Leaderboard('create') para crear un nuevo marcador.
+      Posteriormente, se llama a PreNewGame() para realizar las preparaciones necesarias antes de iniciar un nuevo juego,
+      y finalmente se redirige la página al juego nuevo (NewGame).
+    """
     st.markdown('<style>[data-testid="stSidebar"] > div:first-child {width: 310px;}</style>', unsafe_allow_html=True,)  # reduce sidebar width
     st.markdown(purple_btn_colour, unsafe_allow_html=True)
 
@@ -402,6 +468,9 @@ def Main():
 
         st.markdown(horizontal_bar, True)
 
-
+"""
+Este fragmento de código comprueba si la variable runpage está definida en el objeto mystate.
+Si no está definida, se establece mystate.runpage en Main. Luego se llama a mystate.runpage().
+"""
 if 'runpage' not in mystate: mystate.runpage = Main
 mystate.runpage()
