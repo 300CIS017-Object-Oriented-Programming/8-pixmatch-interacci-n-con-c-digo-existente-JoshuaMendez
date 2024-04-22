@@ -42,6 +42,73 @@ Los atributos son las características o propiedades de las clases, y los modifi
 #  Entregable - Mejoras para pasar a POO
 Detalla en este markdown lo siguiente: 
 - **Clases a Definir:** Enumera las clases que se podrían definir, describe sus propósito y justifica porque crees que es una clase útil para mejorar el programa.
+
+**View**
+**Propósito:** Tendrá toda la interacción con el usuario.
+**Justificación:** Separa las funcionalidades del juego de la comunicación con el usuario.
+
+**Juego**
+**Propósito:** Abarca todo el juego en general, desde su lógica, hasta sus usuarios, sesiones, etc...
+**Justificación:** Esto nos facilitará la parte modular del código, mejorando su expansión de nuevas funciones a largo plazo, la legibilidad y la eficiencia del mismo.
+
+**Jugador**
+**Propósito:** Hace de usuario, cada sesión nueva de cualquier usuario será un Jugador.
+**Justificación:** Guardar atributos referentes a los datos del usuario, tal como su nombre, puntuación, etc...
+
+**Leaderboard**
+**Propósito:** Guarda las puntuaciones más altas de los usuarios.
+**Justificación:** Facilitaría la manera de guardar los puntajes más altos, organizándolos de mayor a menor.
+
+**Tablero**
+**Propósito:** Administra y muestra los emojis.
+**Justificación:** Tendría la información que tiene el tablero actualmente, tal como los emojis mostrados en él.
+
+
 - **Métodos Importantes:** Enumera los métodos principales para cada clase. Incluye una descripción de cuál sería la utilidad de cada método
+
+**Clase Juego**
+**start_game(dificultad):** Empieza el juego y borra las cookies del usuario para empezar una sesión completamente desde 0.
+
+**end_game():** Termina el juego borrando los datos de la sesión para que no hayan conflictos posteriores de las sesiones.
+
+**Clase Leaderboard**
+**show_board():** Muestra el tablero de juego.
+**erase_board():** Borra el tablero completamente.
+
+**Clase Jugador**
+**show_info():** Mostrar toda la información de jugador.
+**update_score():** Actualiza el puntaje.
+**update_sum_score():** Actualiza el puntaje sumándolo al actual.
+
+**Clase Leaderboard**
+**get_name_place(num):** Muestra el usuario que está en _num_ lugar.
+**show_all:** Muestra todos los usuarios en orden ascendente del leaderboard.
+
 - **Imagen del UML del diagrama de clases**  Adjunta una imagen del UML del diagrama de clases como una forma visual de planificar y entender la estructura de las clases, métodos, atributos y relaciones que podría tener una versión mejorada del código fuente.
+![img_19](img/img_19.png)
+
+
 - **Organización de archivos:** Propon una estructura de organización de los archivos de este proyecto para que no queden todos en la raiz principal. Investiga cuáles podrían ser buenas formas de organizar los directorios y a partir de tu investigación indica qué directorios crearías y cómo los organizarías. 
+
+**source/:**
+  - Esta carpeta sería la general para el proyecto.
+
+  --- **docs/:**
+    - En esta carpeta habría un poco de documentación del proyecto y cómo utilizarlo.
+  
+  --- **functional/:**
+  - En esta carpeta estarían los archivos funcionales tales como el .json que guarda el leaderboard, entre otros.
+
+  --- **main/:**
+  - En esta carpeta estarían todos los archivos relacionados con el funcionamiento del juego. Tales como board.py, leaderboard.py, player.py.
+
+  --- **view/:**
+  - En esta carpeta estarían los archivos que interactúan con el usuario tal como el view.py, main.py.
+
+  --- **img/:**
+  - En esta carpeta estarían los recursos gráficos.
+
+  --- **venv/:**
+  - Entorno de programación para desarrollar el proyecto.
+
+-requirements.txt
