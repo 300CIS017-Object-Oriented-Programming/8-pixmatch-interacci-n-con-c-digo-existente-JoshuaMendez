@@ -56,6 +56,15 @@ if "GameDetails" not in mystate: mystate.GameDetails = ['Medium', 6, 7, '']  # d
 
 # common functions
 def ReduceGapFromPageTop(wch_section = 'main page'):
+    """
+    Especifica la sección en la cual se va a reducir el espacio en blanco de la página.
+    Las cuales pueden ser:
+     - main page
+     - sidebar
+     - all
+    Cada una con características diferentes para eliminar el gap.
+    La función "st.markdown(...)" es nativa de Streamlit para renderizar texto en Markdown en CSS.
+    """
     if wch_section == 'main page': st.markdown(" <style> div[class^='block-container'] { padding-top: 2rem; } </style> ", True) # main area
     elif wch_section == 'sidebar': st.markdown(" <style> div[class^='st-emotion-cache-10oheav'] { padding-top: 0rem; } </style> ", True) # sidebar
     elif wch_section == 'all': 
@@ -63,6 +72,34 @@ def ReduceGapFromPageTop(wch_section = 'main page'):
         st.markdown(" <style> div[class^='st-emotion-cache-10oheav'] { padding-top: 0rem; } </style> ", True) # sidebar
     
 def Leaderboard(what_to_do):
+    """
+    Esta es la función que determina qué hacemos con el Leaderboard.
+    Recibimos "what_to_do" que nos indicará qué hacer en ese caso específico.
+
+    Si "what_to_do" es igual a 'create':
+    1. Revisamos que haya un nombre en la sesión.
+    2. Revisamos que no haya un archivo 'leaderboard.json'.
+    Si esto se cumple, entonces creamos ese archivo en modo
+    escritura para poder modificarlo posteriormente en el juego.
+
+    Si "what_to_do" es igual a 'write':
+    1. Revisamos que haya un nombre en la sesión.
+    2. Abrimos el archivo 'leaderboard.json' y vemos qué tamaño tiene.
+    3. Añadimos el nuevo participante con su nombre, país y puntaje en la posición del tamaño del leaderboard + 1.
+    4. Convertimos los datos del archivo a tuplas con el método .items(), se organiza de manera descendete para que
+    las tupla con puntaje más alto quede de primero, y así sucesivamente.
+    Con el método dict() volvemos las tuplas nuevamente a un diccionario para poder volver a accederlo posteriormente.
+    5. Revisamos que el leaderboard solo contenga a 3 usuarios con sus respectivos puntajes más altos. Si no es así, entonces
+    itera sobre el tamaño del leaderboard eliminando los datos con menor puntaje (ya que ya está ordenado) hasta que tenga una longitud máxima de 3.
+    6. Al final, simplemente escribe en el archivo json los cambios que hizo, dejando los 3 usuarios con sus respectivos puntajes más altos.
+
+    Si "what_to_do" es igual a 'read':
+    1. Revisamos que haya un nombre en la sesión.
+    2. Si existe el archivo de leaderboard.json, lo abrimos en modo lectura.
+    3. Organizamos de manera descendente el archivo.
+    4. Hacemos un ciclo para iterar sobre el leaderboard e ir imprimiendo de manera
+    ordenada las sesiones con puntajes más altos.
+    """
     if what_to_do == 'create':
         if mystate.GameDetails[3] != '':
             if os.path.isfile(vpth + 'leaderboard.json') == False:
@@ -78,8 +115,8 @@ def Leaderboard(what_to_do):
                 leaderboard[str(leaderboard_dict_lngth + 1)] = {'NameCountry': mystate.GameDetails[3], 'HighestScore': mystate.myscore}
                 leaderboard = dict(sorted(leaderboard.items(), key=lambda item: item[1]['HighestScore'], reverse=True))  # sort desc
 
-                if len(leaderboard) > 4:
-                    for i in range(len(leaderboard)-4): leaderboard.popitem()    # rmv last kdict ey
+                if len(leaderboard) > 3:
+                    for i in range(len(leaderboard)-3): leaderboard.popitem()    # rmv last kdict ey
 
                 json.dump(leaderboard, open(vpth + 'leaderboard.json', 'w'))     # write file
 
@@ -100,9 +137,15 @@ def Leaderboard(what_to_do):
                             sc1.write(f"🥇 | {leaderboard[vkey]['NameCountry']}: :red[{leaderboard[vkey]['HighestScore']}]")
                         elif rknt == 2: sc2.write(f"🥈 | {leaderboard[vkey]['NameCountry']}: :red[{leaderboard[vkey]['HighestScore']}]")
                         elif rknt == 3: sc3.write(f"🥈 | {leaderboard[vkey]['NameCountry']}: :red[{leaderboard[vkey]['HighestScore']}]")
-                        elif rknt == 4: sc3.write(f"🥈 | {leaderboard[vkey]['NameCountry']}: :red[{leaderboard[vkey]['HighestScore']}]")
 
 def InitialPage():
+    """
+    Simplemente una presentación de la ágina principal del programa.
+    Se utilizan métodos de Streamlit como .subheader .markdown, etc...
+    Se utiliza CSS para las fuentes de las letras.
+
+    En la columna 2 se muestran las reglas, una imagen e información del autor.
+    """
     with st.sidebar:
         st.subheader("🖼️ Pix Match:")
         st.markdown(horizontal_bar, True)
@@ -138,6 +181,9 @@ def InitialPage():
     st.markdown(author_dtl, unsafe_allow_html=True)
 
 def ReadPictureFile(wch_fl):
+    """
+    Lee un archivo de imagen específico y luego devuelve los datos de la imagen codificados en base64
+    """
     try:
         pxfl = f"{vpth}{wch_fl}"
         return base64.b64encode(open(pxfl, 'rb').read()).decode()
@@ -145,6 +191,20 @@ def ReadPictureFile(wch_fl):
     except: return ""
 
 def PressedCheck(vcell):
+    """
+    1. Verifica si un botón de jugador específico no ha sido presionado previamente.
+    2. Si el botón no ha sido presionado:
+    - Marca el botón como presionado.
+    - Agrega la celda correspondiente a una lista de celdas seleccionadas.
+    3. Comprueba si el emoji del botón coincide con un emoji específico.
+    Si los emojis coinciden:
+    - Marca el botón como verdadero.
+    - Incrementa la puntuación del jugador.
+    - Ajusta la puntuación según la dificultad del juego.
+    Si los emojis no coinciden:
+    - Marca el botón como falso.
+    - Reduce la puntuación del jugador.
+    """
     if mystate.plyrbtns[vcell]['isPressed'] == False:
         mystate.plyrbtns[vcell]['isPressed'] = True
         mystate.expired_cells.append(vcell)
@@ -162,6 +222,16 @@ def PressedCheck(vcell):
             mystate.myscore -= 1
 
 def ResetBoard():
+    """
+    1. Obtiene el número total de celdas por fila o columna del juego.
+    2. Selecciona aleatoriamente un emoji de la lista mystate.emoji_bank para representar el emoji de la barra lateral del juego.
+    3. Inicializa una variable booleana para verificar si el emoji de la barra lateral está en la lista de emojis asignados a los botones del juego.
+    4. Recorre todas las celdas del juego y asigna emojis aleatorios a los botones que aún no han sido presionados.
+       Si el emoji asignado es igual al emoji de la barra lateral, marca la variable booleana como verdadera.
+    5. Después de asignar emojis a todos los botones, verifica si el emoji de la barra lateral está presente en la lista de emojis asignados a los botones. Si no lo está:
+     - Genera una lista de índices de botones que aún no han sido presionados.
+     - Si hay botones disponibles, selecciona uno aleatoriamente y asigna el emoji de la barra lateral a ese botón.
+    """
     total_cells_per_row_or_col = mystate.GameDetails[2]
 
     sidebar_emoji_no = random.randint(1, len(mystate.emoji_bank))-1
@@ -184,6 +254,15 @@ def ResetBoard():
             mystate.plyrbtns[lptr]['eMoji'] = mystate.sidebar_emoji
 
 def PreNewGame():
+    """
+    1. Obtiene el número total de celdas por fila o columna del juego desde mystate.GameDetails.
+    2. Inicializa la lista mystate.expired_cells y la variable mystate.myscore en 0.
+    3. Define diferentes listas de emojis para diferentes categorías como foxes, emojis, humans, foods, etc.
+    4. Selecciona aleatoriamente una lista de emojis basada en la dificultad del juego ('Easy', 'Medium', o 'Hard') y la asigna a mystate.emoji_bank.
+    5. Inicializa un diccionario mystate.plyrbtns que contiene información sobre cada botón del juego.
+       Cada botón se identifica por un número de celda y tiene tres propiedades: isPressed para indicar si el botón ha sido presionado,
+       isTrueFalse para indicar si la selección del jugador es verdadera o falsa, y eMoji para almacenar el emoji asociado al botón.
+    """
     total_cells_per_row_or_col = mystate.GameDetails[2]
     mystate.expired_cells = []
     mystate.myscore = 0
@@ -219,6 +298,15 @@ def PreNewGame():
     for vcell in range(1, ((total_cells_per_row_or_col ** 2)+1)): mystate.plyrbtns[vcell] = {'isPressed': False, 'isTrueFalse': False, 'eMoji': ''}
 
 def ScoreEmoji():
+    """
+    - Si la puntuación del jugador es igual a 0, devuelve el emoji '😐'.
+    - Si la puntuación del jugador está entre -5 y -1 (inclusive), devuelve el emoji '😏'.
+    - Si la puntuación del jugador está entre -10 y -6 (inclusive), devuelve el emoji '☹️'.
+    - Si la puntuación del jugador es igual o inferior a -11, devuelve el emoji '😖'.
+    - Si la puntuación del jugador está entre 1 y 5 (inclusive), devuelve el emoji '🙂'.
+    - Si la puntuación del jugador está entre 6 y 10 (inclusive), devuelve el emoji '😊'.
+    - Si la puntuación del jugador es mayor que 10, devuelve el emoji '😁'.
+    """
     if mystate.myscore == 0: return '😐'
     elif -5 <= mystate.myscore <= -1: return '😏'
     elif -10 <= mystate.myscore <= -6: return '☹️'
@@ -228,6 +316,18 @@ def ScoreEmoji():
     elif mystate.myscore > 10: return '😁'
 
 def NewGame():
+    """
+    - ResetBoard(): Esta función inicializa el tablero del juego y las variables relacionadas.
+    - ReduceGapFromPageTop('sidebar'): Ajusta el espacio en blanco en la parte superior de la barra lateral.
+    - Barra lateral: Dentro de un contenedor de barra lateral, se muestran detalles del juego como el tipo de juego
+      ("🖼️ Pix Match: {tipo de juego}"), el emoji de la barra lateral, el temporizador (si está activado), y la puntuación actual del jugador.
+    - Botones del juego: Se crean botones para cada celda del tablero del juego. Si una celda ha sido presionada por el jugador,
+      se muestra el emoji correspondiente. Si la celda aún no ha sido presionada, se muestra un botón con el emoji oculto.
+      Los emojis se obtienen de mystate.plyrbtns.
+    - Comprobación de finalización del juego: Si todas las celdas del tablero han sido presionadas, se llama a la función Leaderboard('write')
+      para registrar la puntuación en el marcador. Luego se muestra una animación de celebración (st.balloons()) o una animación de nieve (st.snow())
+      dependiendo de si la puntuación es positiva o no. Después de 5 segundos, la página se redirige a la página principal (Main) y se vuelve a cargar.
+    """
     ResetBoard()
     total_cells_per_row_or_col = mystate.GameDetails[2]
 
@@ -240,14 +340,8 @@ def NewGame():
 
         aftimer = st_autorefresh(interval=(mystate.GameDetails[1] * 1000), key="aftmr")
         if aftimer > 0: mystate.myscore -= 1
-        maxFails = ((mystate.GameDetails[2]**2 / 2) + 1)
-        if (len(mystate.expired_cells) >= maxFails):
-            st.info(f"You've lost!")
-            st.snow()
-            tm.sleep(5)
-            mystate.runpage = Main
-            st.rerun()
-        st.info(f"{ScoreEmoji()} Score: {mystate.myscore} | Pending: {(total_cells_per_row_or_col ** 2)-len(mystate.expired_cells)} | Fails: {len(mystate.expired_cells)} | Max Fails: {maxFails:.0f}")
+
+        st.info(f"{ScoreEmoji()} Score: {mystate.myscore} | Pending: {(total_cells_per_row_or_col ** 2)-len(mystate.expired_cells)}")
 
         st.markdown(horizontal_bar, True)
         if st.button(f"🔙 Return to Main Page", use_container_width=True):
@@ -332,6 +426,18 @@ def NewGame():
         st.rerun()
 
 def Main():
+    """
+    - Ancho de la barra lateral: Reduce el ancho de la barra lateral a 310 píxeles mediante CSS.
+    - Color de los botones púrpuras: Aplica un estilo de color púrpura a los botones del juego.
+    - Inicialización de la página: Llama a la función InitialPage() para configurar la página inicial del juego.
+    - Selección de nivel de dificultad: Dentro de la barra lateral, proporciona un selector de radio para que el
+      usuario elija el nivel de dificultad del juego: 'Easy', 'Medium' o 'Hard'. También hay un campo de entrada de
+      texto para que el jugador ingrese su nombre y país, que es opcional y se usa solo para el marcador.
+    - Inicio de un nuevo juego: Si el usuario hace clic en el botón "🕹️ New Game", se establecen los detalles del juego
+      según el nivel de dificultad seleccionado. Luego se llama a la función Leaderboard('create') para crear un nuevo marcador.
+      Posteriormente, se llama a PreNewGame() para realizar las preparaciones necesarias antes de iniciar un nuevo juego,
+      y finalmente se redirige la página al juego nuevo (NewGame).
+    """
     st.markdown('<style>[data-testid="stSidebar"] > div:first-child {width: 310px;}</style>', unsafe_allow_html=True,)  # reduce sidebar width
     st.markdown(purple_btn_colour, unsafe_allow_html=True)
 
@@ -362,6 +468,9 @@ def Main():
 
         st.markdown(horizontal_bar, True)
 
-
+"""
+Este fragmento de código comprueba si la variable runpage está definida en el objeto mystate.
+Si no está definida, se establece mystate.runpage en Main. Luego se llama a mystate.runpage().
+"""
 if 'runpage' not in mystate: mystate.runpage = Main
 mystate.runpage()
