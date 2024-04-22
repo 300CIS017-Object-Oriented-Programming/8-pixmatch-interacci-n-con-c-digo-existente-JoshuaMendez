@@ -78,8 +78,8 @@ def Leaderboard(what_to_do):
                 leaderboard[str(leaderboard_dict_lngth + 1)] = {'NameCountry': mystate.GameDetails[3], 'HighestScore': mystate.myscore}
                 leaderboard = dict(sorted(leaderboard.items(), key=lambda item: item[1]['HighestScore'], reverse=True))  # sort desc
 
-                if len(leaderboard) > 3:
-                    for i in range(len(leaderboard)-3): leaderboard.popitem()    # rmv last kdict ey
+                if len(leaderboard) > 4:
+                    for i in range(len(leaderboard)-4): leaderboard.popitem()    # rmv last kdict ey
 
                 json.dump(leaderboard, open(vpth + 'leaderboard.json', 'w'))     # write file
 
@@ -100,6 +100,7 @@ def Leaderboard(what_to_do):
                             sc1.write(f"🥇 | {leaderboard[vkey]['NameCountry']}: :red[{leaderboard[vkey]['HighestScore']}]")
                         elif rknt == 2: sc2.write(f"🥈 | {leaderboard[vkey]['NameCountry']}: :red[{leaderboard[vkey]['HighestScore']}]")
                         elif rknt == 3: sc3.write(f"🥈 | {leaderboard[vkey]['NameCountry']}: :red[{leaderboard[vkey]['HighestScore']}]")
+                        elif rknt == 4: sc3.write(f"🥈 | {leaderboard[vkey]['NameCountry']}: :red[{leaderboard[vkey]['HighestScore']}]")
 
 def InitialPage():
     with st.sidebar:
@@ -239,8 +240,14 @@ def NewGame():
 
         aftimer = st_autorefresh(interval=(mystate.GameDetails[1] * 1000), key="aftmr")
         if aftimer > 0: mystate.myscore -= 1
-
-        st.info(f"{ScoreEmoji()} Score: {mystate.myscore} | Pending: {(total_cells_per_row_or_col ** 2)-len(mystate.expired_cells)}")
+        maxFails = ((mystate.GameDetails[2]**2 / 2) + 1)
+        if (len(mystate.expired_cells) >= maxFails):
+            st.info(f"You've lost!")
+            st.snow()
+            tm.sleep(5)
+            mystate.runpage = Main
+            st.rerun()
+        st.info(f"{ScoreEmoji()} Score: {mystate.myscore} | Pending: {(total_cells_per_row_or_col ** 2)-len(mystate.expired_cells)} | Fails: {len(mystate.expired_cells)} | Max Fails: {maxFails:.0f}")
 
         st.markdown(horizontal_bar, True)
         if st.button(f"🔙 Return to Main Page", use_container_width=True):
